@@ -1,0 +1,6 @@
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT *
+FROM particles
+WHERE status = 'published' AND mass >= 1e-25
+ORDER BY mass DESC NULLS LAST, id ASC
+LIMIT 21 OFFSET 0;

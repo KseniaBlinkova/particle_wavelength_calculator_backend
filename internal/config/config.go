@@ -42,7 +42,7 @@ func Load() Config {
 		Auth: auth.Config{
 			Secret:        env("JWT_SECRET", "lab4-development-secret-change-me"),
 			TTL:           envDuration("JWT_TTL", time.Hour),
-			RedisAddr:     env("REDIS_ADDR", "localhost:6380"),
+			RedisAddr:     env("REDIS_ADDR", "127.0.0.1:6380"),
 			RedisPassword: env("REDIS_PASSWORD", ""),
 			RedisDB:       envInt("REDIS_DB", 0),
 		},

@@ -130,7 +130,7 @@ func publicRoute(r *http.Request) bool {
 		return false
 	}
 	switch r.URL.Path {
-	case "/api/health", "/api/particles", "/api/particles/feed":
+	case "/api/health", "/api/particles", "/api/particles/feed", "/api/particles/random-feed":
 		return true
 	default:
 		return false
@@ -141,7 +141,7 @@ func withCORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Accept, Authorization")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Accept, Authorization, X-Feed-Session")
 
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)

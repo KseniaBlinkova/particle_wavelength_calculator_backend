@@ -6,12 +6,15 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/redis/go-redis/v9"
+
 	"particleapp/internal/auth"
 	"particleapp/internal/config"
 	"particleapp/internal/domain/particle"
 	"particleapp/internal/domain/user"
 	"particleapp/internal/filestorage"
 	"particleapp/internal/httpapi"
+	"particleapp/internal/storage/feedredis"
 	"particleapp/internal/storage/postgres"
 )
 
@@ -39,7 +42,9 @@ func main() {
 	defer tokens.Close()
 	log.Printf("Redis: %s доступен", cfg.Auth.RedisAddr)
 
-	particleUsecase := particle.New(store, files)
+	feedCache := feedredis.New(&redis.Options{Addr: cfg.Auth.RedisAddr, Password: cfg.Auth.RedisPassword, DB: cfg.Auth.RedisDB})
+	defer feedCache.Close()
+	particleUsecase := particle.New(store, files, feedCache)
 	userUsecase := user.New(store, tokens)
 
 	router := httpapi.NewRouter(httpapi.Dependencies{

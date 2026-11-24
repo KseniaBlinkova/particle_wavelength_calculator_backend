@@ -50,10 +50,12 @@
     "/particles": {
       "get": {
         "tags": ["Particles"],
-        "summary": "Получить все опубликованные услуги",
+        "summary": "Получить страницу опубликованных услуг",
         "description": "Публичный метод, JWT не требуется.",
         "parameters": [
-          {"name": "min_mass", "in": "query", "schema": {"type": "number", "minimum": 0}, "description": "Минимальная масса"}
+          {"name": "min_mass", "in": "query", "schema": {"type": "number", "minimum": 0}, "description": "Минимальная масса"},
+          {"name": "limit", "in": "query", "schema": {"type": "integer", "minimum": 1, "maximum": 100, "default": 20}},
+          {"name": "offset", "in": "query", "schema": {"type": "integer", "minimum": 0, "default": 0}}
         ],
         "responses": {"200": {"description": "Список услуг", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ListResponse"}}}}}
       },
@@ -112,6 +114,21 @@
         "responses": {
           "200": {"description": "Элемент ленты", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/FeedResponse"}}}},
           "404": {"description": "Элемент не найден или лента закончилась"}
+        }
+      }
+    },
+    "/particles/random-feed": {
+      "get": {
+        "tags": ["Particles"],
+        "summary": "Получить случайную партию ленты из Redis",
+        "security": [{}, {"bearerAuth": []}],
+        "parameters": [
+          {"name": "X-Feed-Session", "in": "header", "required": true, "schema": {"type": "string", "pattern": "^[a-f0-9]{32}$"}},
+          {"name": "batch", "in": "query", "required": true, "schema": {"type": "integer", "minimum": 1}}
+        ],
+        "responses": {
+          "200": {"description": "До 100 неповторяющихся карточек", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/RandomFeedResponse"}}}},
+          "400": {"description": "Некорректная сессия или номер партии"}
         }
       }
     },
@@ -214,8 +231,18 @@
         "properties": {"min": {"type": "number", "format": "double", "nullable": true}, "max": {"type": "number", "format": "double", "nullable": true}}
       },
       "ListResponse": {
-        "type": "object", "required": ["items", "count", "mass_range"],
-        "properties": {"items": {"type": "array", "items": {"$ref": "#/components/schemas/Particle"}}, "count": {"type": "integer"}, "mass_range": {"$ref": "#/components/schemas/MassRange"}}
+        "type": "object", "required": ["items", "count", "mass_range", "has_more", "query_ms"],
+        "properties": {"items": {"type": "array", "items": {"$ref": "#/components/schemas/Particle"}}, "count": {"type": "integer"}, "has_more": {"type": "boolean"}, "query_ms": {"type": "number"}, "mass_range": {"$ref": "#/components/schemas/MassRange"}}
+      },
+      "RandomFeedResponse": {
+        "type": "object", "required": ["batch", "items"],
+        "properties": {
+          "batch": {"type": "integer"},
+          "items": {"type": "array", "maxItems": 100, "items": {"allOf": [
+            {"$ref": "#/components/schemas/Particle"},
+            {"type": "object", "required": ["number"], "properties": {"number": {"type": "integer", "minimum": 1}}}
+          ]}}
+        }
       },
       "FeedResponse": {
         "type": "object", "required": ["particle"],

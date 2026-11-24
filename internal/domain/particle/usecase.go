@@ -31,7 +31,12 @@ const (
 // по минимальной массе (как в лабораторной №1). Записи в статусе deleted
 // и черновики в выборку не попадают.
 func (u *Usecase) List(ctx context.Context, filter Filter) (ListResponse, error) {
-	particles, err := u.repo.ListPublished(ctx, filter.MinMass)
+	if filter.Limit < 1 || filter.Limit > 100 || filter.Offset < 0 {
+		return ListResponse{}, apperror.Validation("Некорректные параметры страницы")
+	}
+	started := time.Now()
+	particles, err := u.repo.ListPublished(ctx, filter.MinMass, filter.Limit+1, filter.Offset)
+	queryMS := time.Since(started).Seconds() * 1000
 	if err != nil {
 		return ListResponse{}, apperror.Internal("Не удалось получить список услуг")
 	}
@@ -41,12 +46,16 @@ func (u *Usecase) List(ctx context.Context, filter Filter) (ListResponse, error)
 		return ListResponse{}, apperror.Internal("Не удалось получить диапазон масс")
 	}
 
+	hasMore := len(particles) > filter.Limit
+	if hasMore {
+		particles = particles[:filter.Limit]
+	}
 	items, err := u.responses(ctx, particles)
 	if err != nil {
 		return ListResponse{}, err
 	}
 
-	return ListResponse{Items: items, Count: len(items), MassRange: MassRange{Min: minMass, Max: maxMass}}, nil
+	return ListResponse{Items: items, Count: len(items), HasMore: hasMore, QueryMS: queryMS, MassRange: MassRange{Min: minMass, Max: maxMass}}, nil
 }
 
 // Feed — GET /api/particles/feed. Без id отдаёт первую опубликованную услугу,

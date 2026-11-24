@@ -11,16 +11,20 @@ import (
 	"particleapp/internal/storage"
 )
 
-func (s *Store) ListPublished(ctx context.Context, minMass *float64) ([]models.Particle, error) {
+func (s *Store) ListPublished(ctx context.Context, minMass *float64, limit, offset int) ([]models.Particle, error) {
 	query := s.db.WithContext(ctx).
-		Where("particles.status = ?", models.StatusPublished)
+		Where("particles.status = 'published'")
 
 	if minMass != nil {
 		query = query.Where("particles.mass >= ?", *minMass)
 	}
 
+	order := "particles.id ASC"
+	if minMass != nil {
+		order = "particles.mass DESC NULLS LAST, particles.id ASC"
+	}
 	var particles []models.Particle
-	if err := query.Order("particles.id ASC").Find(&particles).Error; err != nil {
+	if err := query.Order(order).Limit(limit).Offset(offset).Find(&particles).Error; err != nil {
 		return nil, err
 	}
 	return particles, nil
@@ -60,7 +64,7 @@ func (s *Store) PublishedMassRange(ctx context.Context) (*float64, *float64, err
 	}
 	err := s.db.WithContext(ctx).Model(&models.Particle{}).
 		Select("MIN(mass) AS min_mass, MAX(mass) AS max_mass").
-		Where("status = ?", models.StatusPublished).
+		Where("status = 'published' AND mass > 0").
 		Scan(&massRange).Error
 	if err != nil {
 		return nil, nil, err
@@ -177,4 +181,17 @@ func (s *Store) oneParticle(ctx context.Context, query *gorm.DB) (*models.Partic
 		return nil, err
 	}
 	return &particle, nil
+}
+
+func (s *Store) RandomPublishedIDs(ctx context.Context, limit int) ([]uint, error) {
+	var ids []uint
+	err := s.db.WithContext(ctx).Model(&models.Particle{}).
+		Where("status = 'published'").Order("random()").Limit(limit).Pluck("id", &ids).Error
+	return ids, err
+}
+
+func (s *Store) PublishedByIDs(ctx context.Context, ids []uint) ([]models.Particle, error) {
+	var particles []models.Particle
+	err := s.db.WithContext(ctx).Where("status = 'published' AND id IN ?", ids).Find(&particles).Error
+	return particles, err
 }

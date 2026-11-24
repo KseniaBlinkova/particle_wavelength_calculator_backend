@@ -20,6 +20,7 @@ func Register(mux *http.ServeMux, domain Domain) {
 	mux.HandleFunc("GET /api/particles", func(w http.ResponseWriter, r *http.Request) {
 		list(domain)(w, r)
 	})
+	mux.HandleFunc("GET /api/particles/random-feed", randomFeed(domain))
 	mux.HandleFunc("GET /api/particles/feed", func(w http.ResponseWriter, r *http.Request) {
 		feed(domain)(w, r)
 	})
@@ -45,7 +46,17 @@ func list(domain Domain) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		query := r.URL.Query()
 
-		var filter Filter
+		filter := Filter{Limit: 20}
+		for name, target := range map[string]*int{"limit": &filter.Limit, "offset": &filter.Offset} {
+			if raw := query.Get(name); raw != "" {
+				value, err := strconv.ParseInt(raw, 10, 32)
+				if err != nil || value < 0 || (name == "limit" && (value == 0 || value > 100)) {
+					web.WriteError(w, apperror.Validation("Некорректный параметр "+name))
+					return
+				}
+				*target = int(value)
+			}
+		}
 		if raw := query.Get("min_mass"); raw != "" {
 			minMass, err := strconv.ParseFloat(raw, 64)
 			if err != nil || minMass < 0 || math.IsNaN(minMass) || math.IsInf(minMass, 0) {

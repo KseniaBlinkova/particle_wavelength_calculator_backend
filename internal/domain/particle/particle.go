@@ -11,11 +11,15 @@ import (
 // Filter — параметры фильтрации списка услуг (GET /api/particles).
 type Filter struct {
 	MinMass *float64
+	Limit   int
+	Offset  int
 }
 
 // Repository — порт хранения, который реализует internal/storage/postgres.
 type Repository interface {
-	ListPublished(ctx context.Context, minMass *float64) ([]models.Particle, error)
+	ListPublished(ctx context.Context, minMass *float64, limit, offset int) ([]models.Particle, error)
+	RandomPublishedIDs(ctx context.Context, limit int) ([]uint, error)
+	PublishedByIDs(ctx context.Context, ids []uint) ([]models.Particle, error)
 	FirstPublished(ctx context.Context) (*models.Particle, error)
 	GetNextPublished(ctx context.Context, id uint) (*models.Particle, error)
 	GetPublishedByID(ctx context.Context, id uint) (*models.Particle, error)
@@ -38,6 +42,7 @@ type Files interface {
 // Domain — бизнес-логика домена «услуга»: один метод на каждый URL API.
 type Domain interface {
 	List(ctx context.Context, filter Filter) (ListResponse, error)
+	RandomFeed(ctx context.Context, session string, batch int) (RandomFeedResponse, error)
 	Feed(ctx context.Context, id *uint, next bool) (FeedResponse, error)
 	Draft(ctx context.Context) (*ParticleResponse, error)
 	Create(ctx context.Context, request CreateRequest) (*ParticleResponse, error)
@@ -47,11 +52,12 @@ type Domain interface {
 }
 
 type Usecase struct {
-	repo  Repository
-	files Files
-	now   func() time.Time
+	repo      Repository
+	files     Files
+	now       func() time.Time
+	feedCache FeedCache
 }
 
-func New(repo Repository, files Files) *Usecase {
-	return &Usecase{repo: repo, files: files, now: time.Now}
+func New(repo Repository, files Files, feedCache FeedCache) *Usecase {
+	return &Usecase{repo: repo, files: files, now: time.Now, feedCache: feedCache}
 }

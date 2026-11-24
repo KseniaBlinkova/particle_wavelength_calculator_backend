@@ -34,6 +34,8 @@ type MassRange struct {
 type ListResponse struct {
 	Items     []ParticleResponse `json:"items"`
 	Count     int                `json:"count"`
+	HasMore   bool               `json:"has_more"`
+	QueryMS   float64            `json:"query_ms"`
 	MassRange MassRange          `json:"mass_range"`
 }
 
