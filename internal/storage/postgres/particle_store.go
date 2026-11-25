@@ -76,13 +76,14 @@ func (s *Store) Create(ctx context.Context, particle *models.Particle) error {
 	return s.db.WithContext(ctx).Create(particle).Error
 }
 
-func (s *Store) UpdateContent(ctx context.Context, id uint, mass *float64, spin, fullDescription string) error {
+func (s *Store) UpdateContent(ctx context.Context, id uint, mass *float64, spin, fullDescription, descriptionEN string) error {
 	return s.db.WithContext(ctx).Model(&models.Particle{}).
 		Where("id = ?", id).
 		Updates(map[string]any{
 			"mass":             mass,
 			"spin":             spin,
 			"full_description": fullDescription,
+			"description_en":   descriptionEN,
 		}).Error
 }
 

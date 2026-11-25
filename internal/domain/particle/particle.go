@@ -27,7 +27,7 @@ type Repository interface {
 	GetDraftByCreator(ctx context.Context, creatorID uint) (*models.Particle, error)
 	PublishedMassRange(ctx context.Context) (minMass, maxMass *float64, err error)
 	Create(ctx context.Context, particle *models.Particle) error
-	UpdateContent(ctx context.Context, id uint, mass *float64, spin, fullDescription string) error
+	UpdateContent(ctx context.Context, id uint, mass *float64, spin, fullDescription, descriptionEN string) error
 	UpdateStatus(ctx context.Context, id, ownerID uint, from, to models.ParticleStatus, at time.Time) (bool, error)
 	LikeStats(ctx context.Context, particleIDs []uint, viewerID uint) (map[uint]models.LikeStat, error)
 	SetLike(ctx context.Context, userID, particleID uint, liked bool) (int, error)

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"regexp"
 	"strings"
 	"time"
 
@@ -136,10 +137,18 @@ func (u *Usecase) Create(ctx context.Context, request CreateRequest) (*ParticleR
 		return nil, err
 	}
 
+	descriptionEN := strings.TrimSpace(request.DescriptionEN)
+	if descriptionEN != "" {
+		if err := validateEnglishDescription(descriptionEN); err != nil {
+			return nil, err
+		}
+	}
+
 	now := u.now()
 	particle := models.Particle{
 		Name:            name,
 		FullDescription: strings.TrimSpace(request.FullDescription),
+		DescriptionEN:   descriptionEN,
 		Mass:            request.Mass,
 		Spin:            strings.TrimSpace(request.Spin),
 		Status:          models.StatusDraft,
@@ -205,8 +214,15 @@ func (u *Usecase) Publish(ctx context.Context, id uint, request PublishRequest) 
 		return nil, err
 	}
 
+	if request.DescriptionEN != nil {
+		particle.DescriptionEN = strings.TrimSpace(*request.DescriptionEN)
+		if err := validateEnglishDescription(particle.DescriptionEN); err != nil {
+			return nil, err
+		}
+	}
+
 	now := u.now()
-	if err := u.repo.UpdateContent(ctx, particle.ID, particle.Mass, particle.Spin, particle.FullDescription); err != nil {
+	if err := u.repo.UpdateContent(ctx, particle.ID, particle.Mass, particle.Spin, particle.FullDescription, particle.DescriptionEN); err != nil {
 		return nil, apperror.Internal("Не удалось сохранить услугу")
 	}
 
@@ -338,6 +354,16 @@ func (u *Usecase) upload(ctx context.Context, kind string, file *UploadedFile, m
 		return "", apperror.Internal("Не удалось загрузить файл " + kind)
 	}
 	return key, nil
+}
+
+var printableASCII = regexp.MustCompile(`^[ -~]{50,100}$`)
+var latinLetter = regexp.MustCompile(`[A-Za-z]`)
+
+func validateEnglishDescription(description string) error {
+	if !printableASCII.MatchString(description) || !latinLetter.MatchString(description) {
+		return apperror.Validation("Краткое описание должно быть на английском и содержать 50–100 символов")
+	}
+	return nil
 }
 
 func validateContent(name string, mass *float64, spin string) error {

@@ -76,6 +76,7 @@
                   "mass": {"type": "number", "minimum": 0},
                   "spin": {"type": "string", "maxLength": 10},
                   "full_description": {"type": "string"},
+                  "description_en": {"type": "string", "minLength": 50, "maxLength": 100},
                   "image": {"type": "string", "format": "binary"},
                   "video": {"type": "string", "format": "binary"}
                 }
@@ -215,6 +216,7 @@
           "id": {"type": "integer", "format": "uint64"},
           "name": {"type": "string"},
           "full_description": {"type": "string"},
+          "description_en": {"type": "string", "minLength": 50, "maxLength": 100},
           "mass": {"type": "number", "format": "double", "nullable": true},
           "spin": {"type": "string"},
           "image_url": {"type": "string", "format": "uri"},
@@ -250,7 +252,7 @@
       },
       "PublishRequest": {
         "type": "object",
-        "properties": {"mass": {"type": "number", "minimum": 0}, "spin": {"type": "string", "maxLength": 10}, "full_description": {"type": "string"}}
+        "properties": {"mass": {"type": "number", "minimum": 0}, "spin": {"type": "string", "maxLength": 10}, "full_description": {"type": "string"}, "description_en": {"type": "string", "minLength": 50, "maxLength": 100}}
       },
       "LikeRequest": {
         "type": "object", "required": ["liked"],

@@ -137,6 +137,7 @@ func create(domain Domain) http.HandlerFunc {
 			Name:            r.FormValue("name"),
 			Spin:            r.FormValue("spin"),
 			FullDescription: r.FormValue("full_description"),
+			DescriptionEN:   r.FormValue("description_en"),
 		}
 		if raw := r.FormValue("mass"); raw != "" {
 			mass, err := strconv.ParseFloat(raw, 64)

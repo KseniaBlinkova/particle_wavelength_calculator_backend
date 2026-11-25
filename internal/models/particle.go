@@ -28,6 +28,7 @@ type Particle struct {
 	ID              uint           `gorm:"primaryKey;type:integer"`
 	Name            string         `gorm:"size:100;not null"`
 	FullDescription string         `gorm:"column:full_description;type:text"`
+	DescriptionEN   string         `gorm:"column:description_en;size:100"`
 	Status          ParticleStatus `gorm:"size:20;not null;default:draft"`
 	ImageKey        string         `gorm:"column:image_key;size:255"`
 	VideoKey        string         `gorm:"column:video_key;size:255"`

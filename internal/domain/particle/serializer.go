@@ -14,6 +14,7 @@ type ParticleResponse struct {
 	ID              uint       `json:"id"`
 	Name            string     `json:"name"`
 	FullDescription string     `json:"full_description"`
+	DescriptionEN   string     `json:"description_en,omitempty"`
 	Mass            *float64   `json:"mass"`
 	Spin            string     `json:"spin"`
 	ImageURL        string     `json:"image_url"`
@@ -74,6 +75,7 @@ type CreateRequest struct {
 	Mass            *float64
 	Spin            string
 	FullDescription string
+	DescriptionEN   string
 	Image           *UploadedFile
 	Video           *UploadedFile
 }
@@ -84,6 +86,7 @@ type PublishRequest struct {
 	Mass            *float64 `json:"mass"`
 	Spin            *string  `json:"spin"`
 	FullDescription *string  `json:"full_description"`
+	DescriptionEN   *string  `json:"description_en"`
 }
 
 // LikeRequest — POST /api/particles/{id}/like: 1 ставит лайк, 0 отменяет.
@@ -96,6 +99,7 @@ func newParticleResponse(particle models.Particle, stat models.LikeStat, files F
 		ID:              particle.ID,
 		Name:            particle.Name,
 		FullDescription: particle.FullDescription,
+		DescriptionEN:   particle.DescriptionEN,
 		Mass:            particle.Mass,
 		Spin:            particle.Spin,
 		ImageURL:        files.URL(particle.ImageKey, defaultImageKey),
